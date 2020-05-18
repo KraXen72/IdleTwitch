@@ -245,7 +245,7 @@ async function readLoginData() {
 
       if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
       browserConfig.executablePath = configFile.exec;
-      cookie[0].value = configFile.token;
+      cookie[0].value = process.env.auth_token;
 
       return cookie;
     } else if (process.env.token) {
