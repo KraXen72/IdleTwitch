@@ -1,0 +1,24 @@
+{
+  "name": "idle-twitch",
+  "version": "1.0.0",
+  "description": "A simple idle twitch bot for drops.",
+  "main": "app.js",
+  "dependencies": {
+    "cli-spinner": "^0.2.10",
+    "colors": "^1.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexSimpler/IdleTwitch.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexSimpler/IdleTwitch/issues"
+  },
+  "homepage": "https://github.com/AlexSimpler/IdleTwitch#readme"
+}
