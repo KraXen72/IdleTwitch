@@ -4,8 +4,13 @@
   "description": "A simple idle twitch bot for drops.",
   "main": "app.js",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
     "cli-spinner": "^0.2.10",
-    "colors": "^1.4.0"
+    "colors": "^1.4.0",
+    "dayjs": "^1.8.27",
+    "inquirer": "^7.1.0",
+    "puppeteer": "^3.1.0",
+    "treekill": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {
