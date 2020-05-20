@@ -3,14 +3,14 @@
 A simple idle twitch bot for drops. Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher).
 
 - [How to Use?](#How-to-use?)
-- [Changelogs](#Changelogs)
+- [Changelogs](#Features/Changelog)
 - [Gallery](#Gallery)
 - [Credits](#Credits)
 
 ## How to use?
 Just go in the `misc` folder and click on `setup.ps1` > `run with powershell`.
 
-## Changelogs:<br>
+## Features/Changelogs:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
 - Added the name at the login to know if the auth_token is the correct one<br>
 - Changed the interface for windows cmd's<br>
