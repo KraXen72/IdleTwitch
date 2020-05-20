@@ -1,6 +1,12 @@
 # IdleTwitch
 A simple idle twitch bot for drops.
 
+UI:
+![](https://i.imgur.com/qh5JXMz.png)
+
+PROOF:
+![](https://i.imgur.com/hfBxXMR.png)
+
 
 CHANGELOGS:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
