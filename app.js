@@ -17,7 +17,7 @@ const configPath = './config.json'
 const screenshotFolder = './screenshots/';
 const baseUrl = 'https://www.twitch.tv/';
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
-const streamersUrl = (process.env.streamersUrl || 'https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b');
+let streamersUrl = (process.env.streamersUrl || `https://www.twitch.tv/directory/game/`);
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 5);
@@ -38,6 +38,7 @@ const browserClean = 1;
 const browserCleanUnit = 'hour';
 
 let configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : null;
+
 
 var browserConfig = {
   headless: !showBrowser,
@@ -68,6 +69,7 @@ const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--g
 const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
 const DROP_PLACEHOLDER = '.tw-tower__placeholder';
 const DROP_ITEM = '.tw-flex';
+const CATEGORY_NOT_FOUND = '[data-a-target="core-error-message"]';
 
 
 const DEBUG_FLAG = false;
@@ -286,6 +288,7 @@ async function readLoginData() {
       if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
       browserConfig.executablePath = configFile.exec;
       cookie[0].value = configFile.auth_token;
+      streamersUrl = (streamersUrl + configFile.game.toUpperCase());
 
       return cookie;
     } else if (process.env.token) {
@@ -362,7 +365,7 @@ async function spawnBrowser() {
 async function getAllStreamer(page) {
   console.log(`\n=============[ ${'MISC'.brightRed} ]=============`);
 
-  let spinner3 = new Spinner("%s Resolving credentials stuff");
+  let spinner3 = new Spinner("%s Resolving settings and logging in");
   spinner3.setSpinnerString(18);
   let spinner4 = new Spinner("%s Checking & filtering streamers(This may take some time)");
   spinner4.setSpinnerString(0);
@@ -372,6 +375,15 @@ async function getAllStreamer(page) {
     await page.goto(streamersUrl, {
       "waitUntil": "networkidle0"
     });
+
+    //was the category found?
+    const notFound = (await query(page, CATEGORY_NOT_FOUND)).length;
+
+    if (!notFound.length) {
+      spinner3.stop(1);
+      console.log(`[${'-'.brightRed}] Game category not found, did you enter the game as it was displayed on twitch?`);
+      exit();
+    }
 
     spinner3.stop(1);
     await checkLogin(page);
@@ -396,8 +408,6 @@ async function getAllStreamer(page) {
     exit("get streamers/ filter streamer.", e);
   }
 }
-
-
 
 async function checkLogin(page) {
   let cookieSetByServer = await page.cookies();
@@ -424,9 +434,9 @@ async function scroll(page, times) {
       await page.evaluate(async () => {
         var x = document.getElementsByClassName("scrollable-trigger__wrapper");
         x[0].scrollIntoView();
-        return "";
       });
     } catch (e) {
+      clearLine();
       exit("emulate scroll.", e);
     }
     await page.waitFor(scrollDelay);
@@ -435,14 +445,11 @@ async function scroll(page, times) {
 }
 
 
-
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-
 
 async function clickWhenExist(page, selector) {
   let result = await query(page, selector);
@@ -464,16 +471,12 @@ async function cleanup(browser, page) {
   return await spawnBrowser();
 }
 
-
-
 async function killBrowser(browser, page) {
   const pages = await browser.pages();
   await pages.map((page) => page.close());
   treekill(browser.process().pid, 'SIGKILL');
   return;
 }
-
-
 
 async function shutDown() {
   console.log("\nExiting...");
@@ -506,8 +509,8 @@ async function main() {
     await getAllStreamer(page);
     console.log(`\n=============[ ${'MAIN'.brightRed} ]=============`);
     spinner5.start();
-    await idle(500);
-    spinner5.stop();
+    await idle(1000);
+    spinner5.stop(1);
     await viewRandomPage(browser, page);
 
   } catch (e) {
