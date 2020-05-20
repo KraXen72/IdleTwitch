@@ -8,7 +8,7 @@ A simple idle twitch bot for drops. Forked from [valorant-watcher](https://githu
 - [Credits](#Credits)
 
 ## How to use?
-Just right click on `start.ps1` > `run with powershell`.
+Just go in the `misc` folder and click on `setup.ps1` > `run with powershell`.
 
 ## Changelogs:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
