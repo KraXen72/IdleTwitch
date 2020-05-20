@@ -1,10 +1,9 @@
 # IdleTwitch
 A simple idle twitch bot for drops.
 
-UI:
+## Gallery:
 ![](https://i.imgur.com/qh5JXMz.png)
-
-PROOF:
+===================================
 ![](https://i.imgur.com/hfBxXMR.png)
 
 
@@ -18,3 +17,6 @@ CHANGELOGS:<br>
 - Added the choice to specifically choose a game to watch drops for<br>
 - Added some error handling with custom error messages<br>
 - Added an idling function
+
+## Credits:
+Forked `valorant-watcher` by d3v and added the above feeatures
