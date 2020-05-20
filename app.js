@@ -377,11 +377,11 @@ async function getAllStreamer(page) {
     });
 
     //was the category found?
-    const notFound = (await query(page, CATEGORY_NOT_FOUND)).length;
+    const notFound = await query(page, CATEGORY_NOT_FOUND);
 
-    if (!notFound.length) {
+    if (notFound.length || notFound.text() == "Category does not exist") {
       spinner3.stop(1);
-      console.log(`[${'-'.brightRed}] Game category not found, did you enter the game as it was displayed on twitch?`);
+      console.log(`[${'-'.brightRed}] Game category not found, did you enter the game as displayed on twitch?`);
       exit();
     }
 
