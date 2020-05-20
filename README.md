@@ -1,5 +1,5 @@
 # IdleTwitch
-A simple idle twitch bot for drops.
+A simple idle twitch bot for drops. Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher).
 
 ## Gallery:
 ![](https://i.imgur.com/qh5JXMz.png)
@@ -13,11 +13,11 @@ CHANGELOGS:<br>
 - Changed the interface for windows cmd's<br>
 - Added animated cli spinners for more readability<br>
 - Added some colors<br>
-- Added a check for the drop, by going to the inventory page (switched from directly accessing the notifications tab to make it simpler) (originally thought by MajesticMarshmallow)<br>
+- Added a check for the drop, by going to the inventory page (switched from directly accessing the notifications tab to make it simpler) (originally thought by _MajesticMarshmallow_)<br>
 - Added the choice to specifically choose a game to watch drops for<br>
 - Added some error handling with custom error messages<br>
 - Added an idling function
 
 ## Credits:
-Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher) by d3v. 
+Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher) originally created by d3v. 
 Updated by me in 2020.
