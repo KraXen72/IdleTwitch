@@ -1,9 +1,13 @@
 # IdleTwitch
 A simple idle twitch bot for drops. Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher).
 
+-[How to Use?](#How-to-use?)
 - [Changelogs](#Changelogs)
 - [Gallery](#Gallery)
 - [Credits](#Credits)
+
+## How to use?
+Just double click on `start.bat`.
 
 ## Changelogs:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
