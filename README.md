@@ -3,14 +3,15 @@
 A simple idle twitch bot for drops. Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher).
 
 - [How to Use?](#How-to-use?)
-- [Changelogs](#Changelogs)
+- [Changelogs](#Features/Changelog)
 - [Gallery](#Gallery)
 - [Credits](#Credits)
+- [Donations](#Donations)
 
 ## How to use?
 Just go in the `misc` folder and click on `setup.ps1` > `run with powershell`.
 
-## Changelogs:<br>
+## Features/Changelogs:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
 - Added the name at the login to know if the auth_token is the correct one<br>
 - Changed the interface for windows cmd's<br>
@@ -29,3 +30,8 @@ Just go in the `misc` folder and click on `setup.ps1` > `run with powershell`.
 ## Credits:
 Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher) originally created by d3v. 
 Updated by AlexSimpler in 2020.
+
+## Donations
+You can also donate to the precursor of this project and idea:
+
+<a href="https://www.buymeacoffee.com/D3v" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
