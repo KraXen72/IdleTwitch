@@ -37,6 +37,8 @@ const browserScreenshot = (process.env.browserScreenshot || false);
 const browserClean = 1;
 const browserCleanUnit = 'hour';
 
+let configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : null;
+
 var browserConfig = {
   headless: !showBrowser,
   args: [
@@ -59,6 +61,17 @@ const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
 const streamSettingsQuery = '[data-a-target="player-settings-button"]';
 const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
+const CHANNEL_STATUS = ".tw-channel-status-text-indicator";
+const DROP_STATUS = '[data-a-target="Drops Enabled"]';
+const DROP_INVENTORY_NAME = '[data-test-selector="drops-list__game-name"]';
+const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--gutter-sm';
+const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
+const DROP_PLACEHOLDER = '.tw-tower__placeholder';
+const DROP_ITEM = '.tw-flex';
+
+
+const DEBUG_FLAG = false;
+
 // ========================================== CONFIG SECTION =================================================================
 
 
@@ -66,6 +79,24 @@ const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 function idle(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+async function query(page, query) {
+  let bodyHTML = await page.evaluate(() => document.body.innerHTML);
+  //use cheerio server based jquery
+  //load the whole body for cheerio to operate with
+  let $ = cheerio.load(bodyHTML);
+  //defining a var for the selection
+  const jquery = $(query);
+  //returning it with some checks
+  if (DEBUG_FLAG && !jquery)
+    throw new Error("Invalid query result");
+  return jquery;
+}
+
+function upperFirst(word) {
+  return (word[0].toUpperCase() + word.substring(1));
+}
+
 // ========================================== UTILS SECTION =================================================================
 
 async function getUserProperty(page, name) {
@@ -86,52 +117,45 @@ async function getUserProperty(page, name) {
   return cookieValue ? cookieValue[0] : new Error("Invalid cookie returned");
 }
 
-async function getValorantStatus(page) {
+async function getDropStatus(page) {
 
-  let spinner = new Spinner("%s Checking for a valorant drop");
+  let spinner = new Spinner(`%s Checking for drops`);
   spinner.setSpinnerString(18);
   spinner.start();
-  await page.click('[aria-label="Open Notifications"]');
-  await idle(2000);
-  let notif = await page.evaluate(() => {
-    document.querySelector('[data-test-selector="center-window__empty"]') ?
-      document.querySelector('[data-test-selector="center-window__empty"]').toString() :
-      false;
-  });
-  if (notif) {
+  await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle2" });
+
+  let noDrops = await query(page, NO_INVENTORY_DROPS);
+
+  if (noDrops.length) {
     spinner.stop(true);
-    console.log("⛔ Haven't received valorant yet");
+    console.log("[" + '-'.brightRed + "] Haven't received a drop yet");
   }
   else {
-    let count = 0;
-    await page.waitForSelector('div[data-test-selector="center-window__content"]', {
-      timeout: 2500
-    });
-
     await idle(1000);
-    count = await page.evaluate(() => {
-      return document.querySelector('[data-test-selector="center-window__content"]').children.length;
-    })
+
+    let count = 0;
+    let drop = await query(page, DROP_INVENTORY_LIST);
+    count = (await query(page, DROP_INVENTORY_LIST + ">" + DROP_ITEM)).length;
     let success = false;
+
     if (count) {
-      //console.log(`ℹ Got ${count} notifications`);
-      for (let i = 0; i < count; i++)//check if really works
-      {
-        let drop = await page.evaluate(() => Array.from(document.querySelectorAll('div[data-test-selector="center-window__content"] .tw-c-text-alt strong:first-of-type'), e => e.innerText));
-        if (drop.some((element) => element == "VALORANT")) {
+      //console.log(`ℹ Got ${count} notifications`)
+      for (let i = 0; i < count; i++) {
+        let game = (await query(page, `${DROP_INVENTORY_LIST + ">" + DROP_ITEM}:nth-child(${i + 1}) ${DROP_INVENTORY_NAME}`))
+          .text().toUpperCase();
+        if (game == configFile.game.toUpperCase()) {
           success = true;
           break;
         }
-
       }
       await idle(1500);
-      spinner.stop(true);
+      spinner.stop(1);
       if (success) {
-        console.log("✅ Successfully received VALORANT");
-        exit("⚙ exiting...");
+        console.log(`🎉 Congrats you got ${(upperFirst(configFile.game)).bold}!`);
+        exit();
       }
       else {
-        console.log("⛔ Haven't received valorant yet...");
+        console.log("[" + '-'.brightRed + "] Haven't received a drop yet");
       }
     }
   }
@@ -159,16 +183,26 @@ async function viewRandomPage(browser, page) {
       let watch = streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watuching timer
 
-      console.log('\n🔗 Now watching streamer: ', baseUrl + watch);
       await page.goto(baseUrl + watch, {
-        "waitUntil": "networkidle0"
-      }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
+        "waitUntil": "networkidle2"
+      });
+
+      let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
+      const dropsEnabled = (await query(page, DROP_STATUS)).text();
+
+      if (!channelStatus.includes("LIVE") || !dropsEnabled.length) {
+        continue;
+      }
+      /* Check for valorant drop each time we watch a new streamer */
+      await getDropStatus(page);
+      /****************************/
+      console.log(`\n[${'√'.brightYellow}] Now watching: `, baseUrl + watch);
+
 
       await clickWhenExist(page, cookiePolicyQuery);
       await clickWhenExist(page, matureContentQuery); //Click on accept button
 
       if (firstRun) {
-        console.log('🔧 Setting lowest possible resolution..');
         await clickWhenExist(page, streamPauseQuery);
 
         await clickWhenExist(page, streamSettingsQuery);
@@ -177,11 +211,12 @@ async function viewRandomPage(browser, page) {
         await clickWhenExist(page, streamQualitySettingQuery);
         await page.waitFor(streamQualityQuery);
 
-        var resolution = await queryOnWebsite(page, streamQualityQuery);
+        var resolution = await query(page, streamQualityQuery);
         resolution = resolution[resolution.length - 1].attribs.id;
         await page.evaluate((resolution) => {
           document.getElementById(resolution).click();
         }, resolution);
+        console.log(`[${'x'.brightYellow}] Lowest resolution set!`);
 
         await clickWhenExist(page, streamPauseQuery);
 
@@ -200,24 +235,24 @@ async function viewRandomPage(browser, page) {
         await page.screenshot({
           path: `${screenshotFolder}${watch}.png`
         });
-        console.log('📸 Screenshot created: ' + `${watch}.png`);
+        console.log('[+] Screenshot created: ' + `${watch}.png`);
       }
 
       await clickWhenExist(page, sidebarQuery); //Open sidebar
       await page.waitFor(userStatusQuery); //Waiting for sidebar
-      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery
+      let status = await query(page, userStatusQuery); //status jQuery
       await clickWhenExist(page, sidebarQuery); //Close sidebar
 
       let currentDate = dayjs().format('HH:mm:ss');
 
-      console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");
-      console.log('🕒 Time: ' + dayjs().format('HH:mm:ss'));
-      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes => ' + dayjs().add((sleep / 60000), 'minutes').format('HH:mm:ss') + '\n');
+      console.log('[' + '?'.brightCyan + '] Account status:', status[0] ? status[0].children[0].data : "Unknown");
+      console.log('[' + '?'.brightCyan + '] Time: ' + dayjs().format('HH:mm:ss'));
+      console.log('[' + '?'.brightCyan + '] Watching stream for ' + sleep / 60000 + ' minutes => ' + dayjs().add((sleep / 60000), 'minutes').format('HH:mm:ss') + '\n');
 
       await page.waitFor(sleep);
 
     } catch (e) {
-      console.log('🤬 Error: ', e);
+      exit("trying to watch a stream.", e);
     }
   }
 }
@@ -235,21 +270,26 @@ async function readLoginData() {
     "storeId": "0",
     "id": 1
   }];
+  let spinner1 = new Spinner('%s Looking for config files');
+
   try {
-    console.log('🔎 Checking config file...');
+    spinner1.setSpinnerString(18);
+    spinner1.start();
 
     if (fs.existsSync(configPath)) {
-      console.log('✅ Json config found!');
+      await idle(1000);
+      spinner1.stop(1);
+      console.log(`[${'+'.brightGreen}] Found cfg file.`);
 
-      let configFile = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+      configFile = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
       if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
       browserConfig.executablePath = configFile.exec;
-      cookie[0].value = process.env.auth_token;
+      cookie[0].value = configFile.auth_token;
 
       return cookie;
     } else if (process.env.token) {
-      console.log('✅ Env config found');
+      console.log(`[${'+'.brightGreen}] Env config found`);
 
       if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
       cookie[0].value = process.env.token; //Set cookie from env
@@ -257,7 +297,8 @@ async function readLoginData() {
 
       return cookie;
     } else {
-      console.log('❌ No config file found!');
+      spinner1.stop(1);
+      console.log(`[${'-'.brightRed}] No config file found!`);
 
       let input = await inquirer.askLogin();
 
@@ -269,37 +310,47 @@ async function readLoginData() {
 
       if (proxy) browserConfig.args[6] = '--proxy-server=' + proxy;
       browserConfig.executablePath = input.exec;
-      cookie[0].value = input.token;
+      cookie[0].value = input.auth_token;
 
       return cookie;
     }
-  } catch (err) {
-    console.log('🤬 Error: ', e);
+  } catch (e) {
+    exit("check for config file.", e);
   }
 }
 
 
 
 async function spawnBrowser() {
-  console.log(`\n=============[ ${'NET'.red} ]=============`);
-  console.log('📱 Launching browser...');
-  var browser = await puppeteer.launch(browserConfig);
-  var page = await browser.newPage();
+  console.log(`\n=============[ ${'NET'.brightRed} ]=============`);
 
-  console.log('🔧 Setting User-Agent...');
-  await page.setUserAgent(userAgent); //Set userAgent
+  let spinner2 = new Spinner('%s getting browser ready');
+  spinner2.setSpinnerString(15);
+  spinner2.start();
 
-  console.log('🔧 Setting auth token...');
-  await page.setCookie(...cookie); //Set cookie
+  try {
+    //Initialize puppeteer
+    var browser = await puppeteer.launch(browserConfig);
+    var page = await browser.newPage();
 
-  console.log('⏰ Setting timeouts...');
-  await page.setDefaultNavigationTimeout(process.env.timeout || 0);
-  await page.setDefaultTimeout(process.env.timeout || 0);
+    await page.setUserAgent(userAgent); //Set userAgent
 
-  if (proxyAuth) {
-    await page.setExtraHTTPHeaders({
-      'Proxy-Authorization': 'Basic ' + Buffer.from(proxyAuth).toString('base64')
-    })
+    await page.setCookie(...cookie); //Set cookie
+
+    //set navigation timeout
+    await page.setDefaultNavigationTimeout(process.env.timeout || 0);
+    await page.setDefaultTimeout(process.env.timeout || 0);
+
+    if (proxyAuth) {
+      await page.setExtraHTTPHeaders({
+        'Proxy-Authorization': 'Basic ' + Buffer.from(proxyAuth).toString('base64')
+      })
+    }
+    spinner2.stop(1);
+    console.log(`[${'+'.brightGreen}] Successfully set up the browser.`);
+  } catch (e) {
+    spinner2.stop(1);
+    exit("set up the browser", e);
   }
 
   return {
@@ -308,26 +359,42 @@ async function spawnBrowser() {
   };
 }
 
-
-
 async function getAllStreamer(page) {
-  console.log(`\n=============[ ${'MISC'.red} ]=============`);
-  await page.goto(streamersUrl, {
-    "waitUntil": "networkidle0"
-  });
-  console.log('🔐 Checking login...');
-  await checkLogin(page);
-  console.log('📡 Checking active streamers...');
-  await scroll(page, scrollTimes);
-  const jquery = await queryOnWebsite(page, channelsQuery);
-  streamers = null;
-  streamers = new Array();
+  console.log(`\n=============[ ${'MISC'.brightRed} ]=============`);
 
-  console.log('🧹 Filtering out html codes...');
-  for (var i = 0; i < jquery.length; i++) {
-    streamers[i] = jquery[i].attribs.href.split("/")[1];
+  let spinner3 = new Spinner("%s Resolving credentials stuff");
+  spinner3.setSpinnerString(18);
+  let spinner4 = new Spinner("%s Checking & filtering streamers(This may take some time)");
+  spinner4.setSpinnerString(0);
+
+  try {
+    spinner3.start();
+    await page.goto(streamersUrl, {
+      "waitUntil": "networkidle0"
+    });
+
+    spinner3.stop(1);
+    await checkLogin(page);
+
+    spinner4.start();
+
+    await scroll(page, scrollTimes);
+    const jquery = await query(page, channelsQuery);
+    streamers = null;
+    streamers = new Array();
+
+    for (var i = 0; i < jquery.length; i++) {
+      streamers[i] = jquery[i].attribs.href.split("/")[1];
+    }
+
+    spinner4.stop(1);
+    console.log(`[${'+'.brightGreen}] Got streamers and filtered them!`);
+    return;
+  } catch (e) {
+    spinner3.stop(1);
+    spinner4.stop(1);
+    exit("get streamers/ filter streamer.", e);
   }
-  return;
 }
 
 
@@ -337,29 +404,31 @@ async function checkLogin(page) {
   for (var i = 0; i < cookieSetByServer.length; i++) {
     if (cookieSetByServer[i].name == 'twilight-user') {
       let name = await getUserProperty(page, 'displayName');
-      console.log(`✅ Successfully logged in as ${name.bold.green}!`);
+      console.log(`[${'+'.brightGreen}] Successfully logged in as ${name.bold.green}!`);
       return true;
     }
   }
-  console.log('🛑 Login failed!');
-  console.log('🔑 Invalid token!');
-  console.log('\nPlease ensure that you have a valid twitch auth-token.\nhttps://github.com/D3vl0per/Valorant-watcher#how-token-does-it-look-like');
   if (!process.env.token) {
     fs.unlinkSync(configPath);
   }
-  process.exit();
+  console.log(`[${'-'.brightRed}] Login failed, is your token valid?`);
+  exit();
 }
 
 
 
 async function scroll(page, times) {
-  console.log('🔨 Emulating scroll...');
 
   for (var i = 0; i < times; i++) {
-    await page.evaluate(async (page) => {
-      var x = document.getElementsByClassName("scrollable-trigger__wrapper");
-      x[0].scrollIntoView();
-    });
+    try {
+      await page.evaluate(async () => {
+        var x = document.getElementsByClassName("scrollable-trigger__wrapper");
+        x[0].scrollIntoView();
+        return "";
+      });
+    } catch (e) {
+      exit("emulate scroll.", e);
+    }
     await page.waitFor(scrollDelay);
   }
   return;
@@ -375,28 +444,17 @@ function getRandomInt(min, max) {
 
 
 
-async function clickWhenExist(page, query) {
-  let result = await queryOnWebsite(page, query);
+async function clickWhenExist(page, selector) {
+  let result = await query(page, selector);
 
   try {
     if (result[0].type == 'tag' && result[0].name == 'button') {
-      await page.click(query);
+      await page.click(selector);
       await page.waitFor(500);
       return;
     }
   } catch (e) { }
 }
-
-
-
-async function queryOnWebsite(page, query) {
-  let bodyHTML = await page.evaluate(() => document.body.innerHTML);
-  let $ = cheerio.load(bodyHTML);
-  const jquery = $(query);
-  return jquery;
-}
-
-
 
 async function cleanup(browser, page) {
   const pages = await browser.pages();
@@ -418,34 +476,43 @@ async function killBrowser(browser, page) {
 
 
 async function shutDown() {
-  console.log("\n👋Bye Bye👋");
+  console.log("\nExiting...");
   run = false;
   process.exit();
 }
 
-async function exit(msg) {
-  console.log(msg);
-  await idle(500);
+async function exit(msg = "", e = null) {
   run = false;
+  if (e && msg.length > 0) {
+    console.log(`[${'-'.brightRed}] An error occured while trying to ${msg}(${e.name}: ${e.message.brightRed})`);
+  }
   process.exit();
 }
 
 async function main() {
   console.clear();
   console.log("xxxxxxxxxxxxxxxxxxxxxx " + 'Idle Twitch'.rainbow + " xxxxxxxxxxxxxxxxxxxxx");
-  console.log('Forked by Flickery'.bold + " v" + '1.02'.italic.green);
-  console.log(`\n=============[ ${'CFG'.red} ]=============`);
-  cookie = await readLoginData();
-  var {
-    browser,
-    page
-  } = await spawnBrowser();
-  await getAllStreamer(page);
-  console.log(`\n=============[ ${'MAIN'.red} ]=============`);
-  console.log('⚙ Running watcher...');
-  await getValorantStatus(page); //check if we received a valorant drop
+  console.log('Forked by Flickery'.bold + " v" + '1.02'.italic.brightGreen);
+  console.log(`\n=============[ ${'CFG'.brightRed} ]=============`);
+  let spinner5 = new Spinner("%s Starting main process");
+  spinner5.setSpinnerString(18);
 
-  await viewRandomPage(browser, page);
+  try {
+    cookie = await readLoginData();
+    var {
+      browser,
+      page
+    } = await spawnBrowser();
+    await getAllStreamer(page);
+    console.log(`\n=============[ ${'MAIN'.brightRed} ]=============`);
+    spinner5.start();
+    await idle(500);
+    spinner5.stop();
+    await viewRandomPage(browser, page);
+
+  } catch (e) {
+    exit("initialize main.", e);
+  }
 };
 
 main();
