@@ -1,4 +1,5 @@
 # IdleTwitch
+===================
 A simple idle twitch bot for drops. Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher).
 
 - [How to Use?](#How-to-use?)
