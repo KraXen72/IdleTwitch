@@ -23,4 +23,4 @@ A simple idle twitch bot for drops. Forked from [valorant-watcher](https://githu
 
 ## Credits:
 Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher) originally created by d3v. 
-Updated by me in 2020.
+Updated by AlexSimpler in 2020.
