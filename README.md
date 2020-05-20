@@ -19,4 +19,5 @@ CHANGELOGS:<br>
 - Added an idling function
 
 ## Credits:
-Forked `valorant-watcher` by d3v and added the above feeatures
+Forked from [valorant-watcher](https://github.com/D3vl0per/Valorant-watcher) by d3v. 
+Updated by me in 2020.
