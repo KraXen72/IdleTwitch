@@ -51,7 +51,7 @@ var browserConfig = {
     '--no-sandbox',
     '--disable-setuid-sandbox'
   ]
-}; //https://github.com/D3vl0per/Valorant-watcher/issues/24
+};
 
 const cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 const matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';
