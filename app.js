@@ -110,13 +110,11 @@ async function getUserProperty(page, name) {
 
   for (let i = 0; i < data.length; i++) {
     if (data[i].name == 'twilight-user') {
-      cookieValue = JSON.stringify((data[i].value).replace(/\%+[1-9]+/gm, ' ').replace(/\ \C\ /gm, ""));
-      cookieValue = cookieValue.replace(/"+/gm, "");
-      let reg = new RegExp(`(?<=${name}\\s\\:\\s)[a-zA-Z0-9]+`, 'gm');
-      cookieValue = cookieValue.match(reg);
+      cookieValue = JSON.parse(decodeURIComponent(data[i].value));
+      if (!cookieValue[name]) throw new Error("Invalid cookie value returned");
     }
   }
-  return cookieValue ? cookieValue[0] : new Error("Invalid cookie returned");
+  return cookieValue[name];
 }
 
 async function getDropStatus(page) {
