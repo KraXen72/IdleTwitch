@@ -27,10 +27,10 @@ const minWatching = (Number(process.env.minWatching) || 15); // Minutes
 const maxWatching = (Number(process.env.maxWatching) || 30); //Minutes
 
 const streamerListRefresh = (Number(process.env.streamerListRefresh) || 1);
-const streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'hour'); //https://day.js.org/docs/en/manipulate/add
+const streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'hour');
 
 const hideBrowser = true;
-const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
+const proxy = (process.env.proxy || "");
 const proxyAuth = (process.env.proxyAuth || "");
 
 const browserScreenshot = (process.env.browserScreenshot || false);
@@ -131,7 +131,7 @@ async function getDropStatus(page) {
    */
 
   let spinner = new Spinner(`%s Checking for drops`);
-  spinner.setSpinnerString(18);
+  spinner.setSpinnerString(0);
   spinner.start();
   await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle2" });
   let noDrops = await query(page, NO_INVENTORY_DROPS);
@@ -146,8 +146,7 @@ async function getDropStatus(page) {
     let count = 0;
     let drop = await query(page, DROP_INVENTORY_LIST);
     count = (await query(page, DROP_INVENTORY_LIST + ">" + DROP_ITEM)).length;
-    let success = false;
-
+    let dropCount = 0;
 
     if (count) {
       //console.log(`ℹ Got ${count} notifications`)
@@ -155,15 +154,13 @@ async function getDropStatus(page) {
         let game = (await query(page, `${DROP_INVENTORY_LIST + ">" + DROP_ITEM}:nth-child(${i + 1}) ${DROP_INVENTORY_NAME}`))
           .text().toUpperCase();
         if (game == configFile.game.toUpperCase()) {
-          success = true;
-          break;
+          dropCount++;
         }
       }
       await idle(1500);
       spinner.stop(1);
-      if (success) {
-        console.log(`🎉 Congrats you got a ${(capitalize(configFile.game)).bold} drop!`);
-        exit();
+      if (dropCount > 0) {
+        console.log(`[+] You got ${dropCount} ${(capitalize(configFile.game)).bold} drop(s) !`);
       }
       else {
         console.log("[" + '-'.brightRed + "] Haven't received a drop yet");
@@ -178,7 +175,7 @@ async function viewRandomPage(browser, page) {
   var streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit);
   var browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
   let spinner0 = new Spinner('%s Checking for drops enabled streamers...');
-  spinner0.setSpinnerString(18);
+  spinner0.setSpinnerString(0);
   let retries = 0;
 
   while (run) {
@@ -193,15 +190,11 @@ async function viewRandomPage(browser, page) {
 
       if (dayjs(streamer_last_refresh).isBefore(dayjs())) {
         await getAllStreamer(page); //Call getAllStreamer function and refresh the list
-        streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
+        streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit);
       }
 
-      let watch = streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+      let watch = streamers[getRandomInt(0, streamers.length - 1)];
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watuching timer
-
-      /* Check for valorant drop each time we watch a new streamer */
-      await getDropStatus(page);
-      /****************************/
 
       spinner0.start();
       await page.goto(baseUrl + watch, {
@@ -212,16 +205,21 @@ async function viewRandomPage(browser, page) {
 
       const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
 
-      if (!channelStatus.includes("LIVE") || !dropsEnabled) {
-        spinner0.stop(1);
-        if (retries >= 2)
-          exit();
-        retries++;
-        console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
-        continue;
-      }
-
+      // if (!channelStatus.includes("LIVE") || !dropsEnabled) {
+      //   spinner0.stop(1);
+      //   if (retries >= 2)
+      //     exit();
+      //   console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
+      //   retries++;
+      //   continue;
+      // }
       spinner0.stop(1);
+
+      await getDropStatus(page);
+      await page.goto(baseUrl + watch, {
+        "waitUntil": "networkidle2"
+      });
+
 
       console.log(`\n[${'√'.brightYellow}] Now watching: `, baseUrl + watch);
 
@@ -297,7 +295,7 @@ async function readLoginData() {
   let spinner1 = new Spinner('%s Looking for config files');
 
   try {
-    spinner1.setSpinnerString(18);
+    spinner1.setSpinnerString(0);
     spinner1.start();
 
     if (fs.existsSync(configPath)) {
@@ -350,7 +348,7 @@ async function spawnBrowser() {
   console.log(`\n=============[ ${'NET'.brightRed} ]=============`);
 
   let spinner2 = new Spinner('%s getting browser ready');
-  spinner2.setSpinnerString(18);
+  spinner2.setSpinnerString(0);
   spinner2.start();
 
   try {
@@ -388,7 +386,7 @@ async function getAllStreamer(page) {
   console.log(`\n=============[ ${'MISC'.brightRed} ]=============`);
 
   let spinner3 = new Spinner("%s Logging in...");
-  spinner3.setSpinnerString(18);
+  spinner3.setSpinnerString(0);
   let spinner4 = new Spinner("%s Fetching streamers (This may take some time)...");
   spinner4.setSpinnerString(0);
 
