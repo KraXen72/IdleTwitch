@@ -205,14 +205,14 @@ async function viewRandomPage(browser, page) {
 
       const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
 
-      // if (!channelStatus.includes("LIVE") || !dropsEnabled) {
-      //   spinner0.stop(1);
-      //   if (retries >= 2)
-      //     exit();
-      //   console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
-      //   retries++;
-      //   continue;
-      // }
+      if (!channelStatus.includes("LIVE") || !dropsEnabled) {
+        spinner0.stop(1);
+        if (retries >= 2)
+          exit();
+        console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
+        retries++;
+        continue;
+      }
       spinner0.stop(1);
 
       await getDropStatus(page);
