@@ -29,7 +29,7 @@ const maxWatching = (Number(process.env.maxWatching) || 30); //Minutes
 const streamerListRefresh = (Number(process.env.streamerListRefresh) || 1);
 const streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'hour'); //https://day.js.org/docs/en/manipulate/add
 
-const showBrowser = false; // false state equ headless mode;
+const hideBrowser = false;
 const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
 const proxyAuth = (process.env.proxyAuth || "");
 
@@ -42,7 +42,7 @@ let configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPa
 
 
 var browserConfig = {
-  headless: true,
+  headless: hideBrowser,
   defaultViewport: null,
   args: [
     '--disable-dev-shm-usage',
@@ -126,9 +126,9 @@ async function getDropStatus(page) {
   let spinner = new Spinner(`%s Checking for drops`);
   spinner.setSpinnerString(18);
   spinner.start();
-  await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle0" });
-  // let noDrops = await query(page, NO_INVENTORY_DROPS);
-  let noDrops = page.$$eval(NO_INVENTORY_DROPS, (drops) => drops.map(drops.textContent === null ? drops.textContent.toUpperCase() : ""));
+  await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle2" });
+  let noDrops = await query(page, NO_INVENTORY_DROPS);
+
   if (noDrops.length) {
     spinner.stop(true);
     console.log("[" + '-'.brightRed + "] Haven't received a drop yet");
@@ -140,6 +140,7 @@ async function getDropStatus(page) {
     let drop = await query(page, DROP_INVENTORY_LIST);
     count = (await query(page, DROP_INVENTORY_LIST + ">" + DROP_ITEM)).length;
     let success = false;
+
 
     if (count) {
       //console.log(`ℹ Got ${count} notifications`)
@@ -162,9 +163,8 @@ async function getDropStatus(page) {
       }
     }
   }
-  await page.close();
 
-  spinner.stop(true);
+  return spinner.stop(true);
 }
 
 async function viewRandomPage(browser, page) {
@@ -173,7 +173,7 @@ async function viewRandomPage(browser, page) {
   let spinner0 = new Spinner('%s Checking for drops enabled streamers...');
   spinner0.setSpinnerString(18);
   let retries = 0;
-  spinner0.start();
+
   while (run) {
     try {
       if (dayjs(browser_last_refresh).isBefore(dayjs())) {
@@ -192,6 +192,11 @@ async function viewRandomPage(browser, page) {
       let watch = streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watuching timer
 
+      /* Check for valorant drop each time we watch a new streamer */
+      await getDropStatus(page);
+      /****************************/
+
+      spinner0.start();
       await page.goto(baseUrl + watch, {
         "waitUntil": "networkidle2"
       });
@@ -199,6 +204,7 @@ async function viewRandomPage(browser, page) {
       let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
 
       const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
+
       if (!channelStatus.includes("LIVE") || !dropsEnabled) {
         spinner0.stop(1);
         if (retries >= 2)
@@ -210,11 +216,7 @@ async function viewRandomPage(browser, page) {
 
       spinner0.stop(1);
 
-      /* Check for valorant drop each time we watch a new streamer */
-      await getDropStatus(page);
-      /****************************/
       console.log(`\n[${'√'.brightYellow}] Now watching: `, baseUrl + watch);
-
 
       await clickWhenExist(page, cookiePolicyQuery);
       await clickWhenExist(page, matureContentQuery); //Click on accept button
@@ -240,7 +242,6 @@ async function viewRandomPage(browser, page) {
         await page.keyboard.press('m'); //For unmute
         firstRun = false;
       }
-
       if (browserScreenshot) {
         await page.waitFor(1000);
         fs.access(screenshotFolder, error => {
@@ -258,7 +259,6 @@ async function viewRandomPage(browser, page) {
       await page.waitFor(userStatusQuery); //Waiting for sidebar
       let status = await query(page, userStatusQuery); //status jQuery
       await clickWhenExist(page, sidebarQuery); //Close sidebar
-
       let currentDate = dayjs().format('HH:mm:ss');
 
       console.log('[' + '?'.brightCyan + '] Account status:', status[0] ? status[0].children[0].data : "Unknown");
@@ -341,7 +341,7 @@ async function spawnBrowser() {
   console.log(`\n=============[ ${'NET'.brightRed} ]=============`);
 
   let spinner2 = new Spinner('%s getting browser ready');
-  spinner2.setSpinnerString(15);
+  spinner2.setSpinnerString(18);
   spinner2.start();
 
   try {
@@ -378,9 +378,9 @@ async function spawnBrowser() {
 async function getAllStreamer(page) {
   console.log(`\n=============[ ${'MISC'.brightRed} ]=============`);
 
-  let spinner3 = new Spinner("%s Resolving settings and logging in");
+  let spinner3 = new Spinner("%s Logging in...");
   spinner3.setSpinnerString(18);
-  let spinner4 = new Spinner("%s Checking & filtering streamers(This may take some time)");
+  let spinner4 = new Spinner("%s Fetching streamers (This may take some time)...");
   spinner4.setSpinnerString(0);
 
   try {
@@ -507,11 +507,8 @@ async function exit(msg = "", e = null) {
 
 async function main() {
   console.clear();
-  console.log("xxxxxxxxxxxxxxxxxxxxxx " + 'Idle Twitch'.rainbow + " xxxxxxxxxxxxxxxxxxxxx");
-  console.log('Forked by Flickery'.bold + " v" + '1.02'.italic.brightGreen);
+  console.log("IdleTwitch" + " v" + '1.02'.italic.brightGreen);
   console.log(`\n=============[ ${'CFG'.brightRed} ]=============`);
-  let spinner5 = new Spinner("%s Starting main process");
-  spinner5.setSpinnerString(18);
 
   try {
     cookie = await readLoginData();
