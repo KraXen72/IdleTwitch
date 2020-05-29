@@ -65,7 +65,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const CHANNEL_STATUS = ".tw-channel-status-text-indicator";
 const DROP_STATUS = '[data-a-target="Drops Enabled"]';
-const DROP_STATUS2 = '.drops-campaing-details_drops-success';
+const DROP_STATUS2 = '.drops-campaign-details_drops-success';
 const DROP_INVENTORY_NAME = '[data-test-selector="drops-list__game-name"]';
 const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--gutter-sm';
 const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
