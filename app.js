@@ -7,6 +7,7 @@ const inquirer = require('./input');
 const treekill = require('tree-kill');
 var Spinner = require('cli-spinner').Spinner;
 let colors = require('colors');
+var readline = require('readline');
 
 var run = true;
 var firstRun = true;
@@ -64,6 +65,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const CHANNEL_STATUS = ".tw-channel-status-text-indicator";
 const DROP_STATUS = '[data-a-target="Drops Enabled"]';
+const DROP_STATUS2 = '.drops-campaing-details_drops-success';
 const DROP_INVENTORY_NAME = '[data-test-selector="drops-list__game-name"]';
 const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--gutter-sm';
 const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
@@ -119,13 +121,14 @@ async function getUserProperty(page, name) {
 
 async function getDropStatus(page) {
 
+  console.log("Bugged out");
   let spinner = new Spinner(`%s Checking for drops`);
   spinner.setSpinnerString(18);
   spinner.start();
-  await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle2" });
-
-  let noDrops = await query(page, NO_INVENTORY_DROPS);
-
+  await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle0" });
+  console.log("Bugged out");
+  // let noDrops = await query(page, NO_INVENTORY_DROPS);
+  let noDrops = page.$$eval(NO_INVENTORY_DROPS, (drops) => drops.map(drops.textContent === null ? drops.textContent.toUpperCase() : ""));
   if (noDrops.length) {
     spinner.stop(true);
     console.log("[" + '-'.brightRed + "] Haven't received a drop yet");
@@ -165,6 +168,9 @@ async function getDropStatus(page) {
 async function viewRandomPage(browser, page) {
   var streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit);
   var browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
+  let spinner0 = new Spinner('%s Checking for drops enabled streamers...');
+  spinner0.setSpinnerString(18);
+  let retries = 0;
   while (run) {
     try {
       if (dayjs(browser_last_refresh).isBefore(dayjs())) {
@@ -188,9 +194,12 @@ async function viewRandomPage(browser, page) {
       });
 
       let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
-      const dropsEnabled = (await query(page, DROP_STATUS)).text();
-
+      const dropsEnabled = (await query(page, DROP_STATUS)).text() || (await query(page, DROP_STATUS2)).text();
       if (!channelStatus.includes("LIVE") || !dropsEnabled.length) {
+        if (retries >= 2)
+          exit();
+        retries++;
+        console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
         continue;
       }
       /* Check for valorant drop each time we watch a new streamer */
@@ -224,7 +233,6 @@ async function viewRandomPage(browser, page) {
         firstRun = false;
       }
 
-
       if (browserScreenshot) {
         await page.waitFor(1000);
         fs.access(screenshotFolder, error => {
@@ -256,7 +264,6 @@ async function viewRandomPage(browser, page) {
     }
   }
 }
-
 async function readLoginData() {
   const cookie = [{
     "domain": ".twitch.tv",
@@ -506,9 +513,6 @@ async function main() {
     } = await spawnBrowser();
     await getAllStreamer(page);
     console.log(`\n=============[ ${'MAIN'.brightRed} ]=============`);
-    spinner5.start();
-    await idle(1000);
-    spinner5.stop(1);
     await viewRandomPage(browser, page);
 
   } catch (e) {
