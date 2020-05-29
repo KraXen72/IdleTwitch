@@ -154,7 +154,7 @@ async function getDropStatus(page) {
       await idle(1500);
       spinner.stop(1);
       if (success) {
-        console.log(`🎉 Congrats you got ${(capitalize(configFile.game)).bold}!`);
+        console.log(`🎉 Congrats you got a ${(capitalize(configFile.game)).bold} drop!`);
         exit();
       }
       else {
@@ -162,6 +162,8 @@ async function getDropStatus(page) {
       }
     }
   }
+  await page.close();
+
   spinner.stop(true);
 }
 
