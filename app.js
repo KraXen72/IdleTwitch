@@ -42,11 +42,13 @@ let configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPa
 
 
 var browserConfig = {
-  headless: !showBrowser,
+  headless: false,
+  defaultViewport: null,
   args: [
     '--disable-dev-shm-usage',
     '--disable-accelerated-2d-canvas',
     '--no-first-run',
+    `--window-size=1320,1080`,
     '--no-zygote',
     '--disable-gpu',
     '--no-sandbox',
@@ -171,6 +173,7 @@ async function viewRandomPage(browser, page) {
   let spinner0 = new Spinner('%s Checking for drops enabled streamers...');
   spinner0.setSpinnerString(18);
   let retries = 0;
+  spinner0.start();
   while (run) {
     try {
       if (dayjs(browser_last_refresh).isBefore(dayjs())) {
@@ -194,14 +197,21 @@ async function viewRandomPage(browser, page) {
       });
 
       let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
+
+      console.log("results: ", (await query(page, DROP_STATUS)).length, " : ", (await query(page, DROP_STATUS2)).length);
+
       const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
       if (!channelStatus.includes("LIVE") || !dropsEnabled) {
+        spinner0.stop(1);
         if (retries >= 2)
           exit();
         retries++;
         console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
         continue;
       }
+
+      spinner0.stop(1);
+
       /* Check for valorant drop each time we watch a new streamer */
       await getDropStatus(page);
       /****************************/
