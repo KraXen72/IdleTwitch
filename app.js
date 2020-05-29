@@ -123,6 +123,13 @@ async function getUserProperty(page, name) {
 
 async function getDropStatus(page) {
 
+  /**
+   * Other solution:
+   * POST request to https://gql.twitch.tv/gql
+   * application/JSON
+   * Request payload: search for operationName: "inventory" or "Inventory_DropsList_CurrentUser"
+   */
+
   let spinner = new Spinner(`%s Checking for drops`);
   spinner.setSpinnerString(18);
   spinner.start();
