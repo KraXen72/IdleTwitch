@@ -42,7 +42,7 @@ let configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPa
 
 
 var browserConfig = {
-  headless: false,
+  headless: true,
   defaultViewport: null,
   args: [
     '--disable-dev-shm-usage',
@@ -67,7 +67,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const CHANNEL_STATUS = ".tw-channel-status-text-indicator";
 const DROP_STATUS = '[data-a-target="Drops Enabled"]';
-const DROP_STATUS2 = '.drops-campaign-details_drops-success';
+const DROP_STATUS2 = '.drops-campaign-details__drops-success.tw-strong';
 const DROP_INVENTORY_NAME = '[data-test-selector="drops-list__game-name"]';
 const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--gutter-sm';
 const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
@@ -197,8 +197,6 @@ async function viewRandomPage(browser, page) {
       });
 
       let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
-
-      console.log("results: ", (await query(page, DROP_STATUS)).length, " : ", (await query(page, DROP_STATUS2)).length);
 
       const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
       if (!channelStatus.includes("LIVE") || !dropsEnabled) {
