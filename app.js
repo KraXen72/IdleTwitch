@@ -218,6 +218,8 @@ async function viewRandomPage(browser, page) {
 
       console.log(`\n[${'√'.brightYellow}] Now watching: `, baseUrl + watch);
 
+      await idle(1000);
+
       await clickWhenExist(page, cookiePolicyQuery);
       await clickWhenExist(page, matureContentQuery); //Click on accept button
 
