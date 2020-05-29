@@ -194,8 +194,8 @@ async function viewRandomPage(browser, page) {
       });
 
       let channelStatus = (await query(page, CHANNEL_STATUS)).text().trim().toUpperCase(); //to avoid getting any unwanted additional lowercase text 
-      const dropsEnabled = (await query(page, DROP_STATUS)).text() || (await query(page, DROP_STATUS2)).text();
-      if (!channelStatus.includes("LIVE") || !dropsEnabled.length) {
+      const dropsEnabled = (await query(page, DROP_STATUS)).length || (await query(page, DROP_STATUS2)).length;
+      if (!channelStatus.includes("LIVE") || !dropsEnabled) {
         if (retries >= 2)
           exit();
         retries++;
