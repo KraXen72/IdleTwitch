@@ -67,7 +67,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const CHANNEL_STATUS = ".tw-channel-status-text-indicator";
 const DROP_STATUS = '[data-a-target="Drops Enabled"]';
-const DROP_STATUS2 = '.drops-campaign-details__drops-success.tw-strong';
+const DROP_STATUS2 = '.drops-campaign-details__drops-success';
 const DROP_INVENTORY_NAME = '[data-test-selector="drops-list__game-name"]';
 const DROP_INVENTORY_LIST = 'div.tw-flex-wrap.tw-tower.tw-tower--180.tw-tower--gutter-sm';
 const NO_INVENTORY_DROPS = '[data-test-selector="drops-list__no-drops-default"]';
@@ -99,7 +99,7 @@ async function query(page, query) {
   return jquery;
 }
 
-function upperFirst(word) {
+function capitalize(word) {
   return (word[0].toUpperCase() + word.substring(1));
 }
 
@@ -123,12 +123,10 @@ async function getUserProperty(page, name) {
 
 async function getDropStatus(page) {
 
-  console.log("Bugged out");
   let spinner = new Spinner(`%s Checking for drops`);
   spinner.setSpinnerString(18);
   spinner.start();
   await page.goto(`${baseUrl}inventory`, { waitUntil: "networkidle0" });
-  console.log("Bugged out");
   // let noDrops = await query(page, NO_INVENTORY_DROPS);
   let noDrops = page.$$eval(NO_INVENTORY_DROPS, (drops) => drops.map(drops.textContent === null ? drops.textContent.toUpperCase() : ""));
   if (noDrops.length) {
@@ -156,7 +154,7 @@ async function getDropStatus(page) {
       await idle(1500);
       spinner.stop(1);
       if (success) {
-        console.log(`🎉 Congrats you got ${(upperFirst(configFile.game)).bold}!`);
+        console.log(`🎉 Congrats you got ${(capitalize(configFile.game)).bold}!`);
         exit();
       }
       else {
