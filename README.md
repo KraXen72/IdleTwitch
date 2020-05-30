@@ -1,6 +1,6 @@
 <h1 align="center"><img src="https://i.imgur.com/ie0oZQP.png"/></h1>
 
-<h2 align="center">A simple idle twitch bot for drops.</h2>
+<h3 align="center">A simple idle bot for twitch drops.</h3>
 
 - [How to get my auth token?](#How-do-I-get-my-auth-token)
 - [How to Use?](#How-to-use)
