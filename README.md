@@ -4,7 +4,7 @@ A simple idle twitch bot for drops.
 
 - [How to get my auth token?](#How-do-I-get-my-auth-token?)
 - [How to Use?](#How-to-use?)
-- [Changelogs](#Features)
+- [Features](#Features)
 - [Changelogs](#Changelogs)
 - [Gallery](#Gallery)
 - [Credits](#Credits)
