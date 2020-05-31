@@ -1,2 +1,2 @@
-Powershell.exe ./misc/setup.ps1
+Powershell.exe -executionpolicy remotesigned -File ./misc/setup.ps1
 pause
