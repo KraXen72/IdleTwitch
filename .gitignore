@@ -104,3 +104,7 @@ dist
 .tern-port
 
 config.json
+app-linux
+app-macos
+*.exe
+*.4
