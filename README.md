@@ -20,6 +20,7 @@ console.log((decodeURIComponent(document.cookie)).match('(?<="authToken":")[a-zA
 Just double click on `start.bat`.
 
 ## Features:
+- Only supports English language for now.
 - Multiple game support
 - Drop annoucement
 - Flexible, fast and colorful interface
