@@ -17,7 +17,8 @@ console.log((decodeURIComponent(document.cookie)).match('(?<="authToken":")[a-zA
 ```
 
 ## How to use?
-Just double click on `start.bat`.
+Install [Node.js](https://nodejs.org/en/).
+Double click on `start.bat`.
 
 ## Features:
 - Only supports English language for now.
