@@ -509,7 +509,8 @@ async function exit(msg = "", e = null) {
   if (e && msg.length > 0) {
     console.log(`[${'-'.brightRed}] An error occured while trying to ${msg}(${e.name}: ${e.message.brightRed})`);
   }
-  process.exit();
+  //process.exit();
+  main();
 }
 
 async function main() {
