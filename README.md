@@ -32,7 +32,6 @@ console.log((decodeURIComponent(document.cookie)).match('(?<="authToken":")[a-zA
 - Streamer filtering with drops-enabled streamers
 - Random watch time for each streamer
 - No popup interruptions on Twitch while idling
-- Actively Maintained
 
 ## Changelogs:<br>
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
