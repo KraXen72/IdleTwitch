@@ -207,9 +207,9 @@ async function viewRandomPage(browser, page) {
 
       if (!channelStatus.includes("LIVE") || !dropsEnabled) {
         spinner0.stop(1);
-        if (retries >= 2)
+        if (retries >= 10000)
           exit();
-        console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${2 - retries} more times... `);
+        console.log(`\n[${'-'.red}] Are you sure the game has drops enabled? Retrying ${10000 - retries} more times... `);
         retries++;
         continue;
       }
