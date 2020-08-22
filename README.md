@@ -1,6 +1,6 @@
 <h1 align="center"><img src="https://i.imgur.com/ie0oZQP.png"/></h1>
 
-<h3 align="center">A simple idle bot for twitch drops.</h3>
+<h3 align="center">[fork] A simple idle bot for twitch drops.</h3>
 
 - [How to get my auth token?](#How-do-I-get-my-auth-token)
 - [How to Use?](#How-to-use)
@@ -34,6 +34,7 @@ console.log((decodeURIComponent(document.cookie)).match('(?<="authToken":")[a-zA
 - No popup interruptions on Twitch while idling
 
 ## Changelogs:<br>
+- Made the app more foolproof and easier to keep running overnight (errors restart the app etc.)
 - Added the `getUserProperty` which parses the content of the `twilight-user` cookie to get any property<br>
 - Added the name at the login to know if the auth_token is the correct one<br>
 - Changed the interface for windows cmd's<br>
